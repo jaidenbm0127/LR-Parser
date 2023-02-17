@@ -7,12 +7,16 @@ public class Parser
     HashMap<String, Rule> rules;
     HashMap<String, HashMap<String, String>> actionOrGoTo;
     String stringToParse;
+    String lastOperation;
 
     public Parser(String testString)
     {
         this.actionOrGoTo = new HashMap<>();
         this.stringToParse = testString;
 
+        makeTable();
+        makeRules();
+        cleanInput();
     }
 
     private void makeRules()
@@ -87,141 +91,130 @@ public class Parser
 
     public void parseString()
     {
-
-        makeTable();
-        makeRules();
-        cleanInput();
-
         stack = new StringBuilder("0");
-        String lastOperation = "";
+        lastOperation = "";
         while(!Objects.equals(lastOperation, "acc"))
         {
-            if(lastOperation.isBlank())
+            if(initialCheck())
             {
-                if(checkIfID())
-                {
-                    lastOperation = actionOrGoTo.get("id").get("0");
-                }
-                else
-                {
-                    lastOperation = actionOrGoTo.get("(").get("0");
-                }
+                continue;
             }
             else
             {
                 if(lastOperation.charAt(0) == 's')
                 {
-                    if(checkIfID())
-                    {
-                        stack.append("id");
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("id", 2)[1];
-                    }
-                    else if(stringToParse.charAt(0) == '*')
-                    {
-                        String currentChar = String.valueOf(stringToParse.charAt(0));
-                        stack.append(currentChar);
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("\\*", 2)[1];
-                    }
-                    else if(stringToParse.charAt(0) == '(')
-                    {
-                        String currentChar = String.valueOf(stringToParse.charAt(0));
-                        stack.append(currentChar);
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("\\(", 2)[1];
-                    }
-                    else if(stringToParse.charAt(0) == ')')
-                    {
-                        String currentChar = String.valueOf(stringToParse.charAt(0));
-                        stack.append(currentChar);
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("\\)", 2)[1];
-                    }
-                    else if(stringToParse.charAt(0) == '+')
-                    {
-                        String currentChar = String.valueOf(stringToParse.charAt(0));
-                        stack.append(currentChar);
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("\\+", 2)[1];
-                    }
-                    else
-                    {
-                        String currentChar = String.valueOf(stringToParse.charAt(0));
-                        stack.append(currentChar);
-                        stack.append(lastOperation.split("s")[1]);
-                        stringToParse = stringToParse.split("\\$", 2)[1];
-                    }
-
-                    if(checkIfID())
-                    {
-                        lastOperation = actionOrGoTo.get("id").get(lastOperation.split("s")[1]);
-                    }
-                    else
-                    {
-                        lastOperation = actionOrGoTo.get(String.valueOf(stringToParse.charAt(0))).get(lastOperation.split("s")[1]);
-                    }
+                    shift();
                 }
                 else
                 {
-                    String ruleNumber = lastOperation.split("r")[1];
-
-                    switch(ruleNumber)
-                    {
-                        case "6", "4", "2" ->
-                        {
-                            int index = stack.lastIndexOf(rules.get(ruleNumber).getInput());
-                            if(Objects.equals(rules.get(ruleNumber).getInput(), "id"))
-                            {
-                                stack.replace(index, index+2, rules.get(ruleNumber).getOutput());
-                            }
-                            else
-                            {
-                                stack.replace(index, index+1, rules.get(ruleNumber).getOutput());
-                            }
-
-                        }
-                        case "5" ->
-                        {
-                            int start = stack.lastIndexOf("(");
-                            int end = stack.lastIndexOf(")");
-                            stack.replace(start, end+1, rules.get(ruleNumber).getOutput());
-                        }
-                        case "3" ->
-                        {
-                            int start = stack.lastIndexOf("T");
-                            int end = stack.lastIndexOf("F");
-                            stack.replace(start, end+1, rules.get(ruleNumber).getOutput());
-                        }
-                        case "1" ->
-                        {
-                            int start = stack.lastIndexOf("E");
-                            int end = stack.lastIndexOf("T");
-                            stack.replace(start, end+1, rules.get(ruleNumber).getOutput());
-                        }
-                    }
-                    while(Character.isDigit(stack.charAt(stack.length()-1)))
-                    {
-                        stack.deleteCharAt((stack.length()-1));
-                    }
-
-                    String state = actionOrGoTo.get(rules.get(ruleNumber).getOutput()).get(String.valueOf(stack.charAt(stack.lastIndexOf(rules.get(ruleNumber).getOutput()) - 1)));
-                    stack.append(state);
-
-                    if(checkIfID())
-                    {
-                        lastOperation = actionOrGoTo.get("id").get(state);
-                    }
-                    else
-                    {
-                        lastOperation = actionOrGoTo.get(String.valueOf(stringToParse.charAt(0))).get(state);
-                    }
+                    rule();
                 }
             }
             System.out.println("Stack: " + stack.toString() + " Input: " + stringToParse + " Operation: " + lastOperation);
         }
     }
 
+    private boolean initialCheck()
+    {
+        if(lastOperation.isBlank())
+        {
+            if(checkIfID())
+            {
+                lastOperation = actionOrGoTo.get("id").get("0");
+            }
+            else
+            {
+                lastOperation = actionOrGoTo.get("(").get("0");
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void rule()
+    {
+
+        String ruleNumber = lastOperation.split("r")[1];
+        dealWithCase(ruleNumber);
+
+        getRidOfTrailingNumber();
+
+        String state = actionOrGoTo.get
+                (rules.get(ruleNumber).getOutput()).get
+                (String.valueOf(stack.charAt(stack.lastIndexOf(rules.get(ruleNumber).getOutput()) - 1)));
+        stack.append(state);
+
+        if(checkIfID())
+        {
+            lastOperation = actionOrGoTo.get("id").get(state);
+        }
+        else
+        {
+            lastOperation = actionOrGoTo.get(String.valueOf(stringToParse.charAt(0))).get(state);
+        }
+    }
+
+    private void getRidOfTrailingNumber()
+    {
+        while(Character.isDigit(stack.charAt(stack.length()-1)))
+        {
+            stack.deleteCharAt((stack.length()-1));
+        }
+    }
+
+    private void dealWithCase(String ruleNumber)
+    {
+        switch(ruleNumber)
+        {
+            case "6", "4", "2" ->
+            {
+                int index = stack.lastIndexOf(rules.get(ruleNumber).getInput());
+                if(Objects.equals(rules.get(ruleNumber).getInput(), "id"))
+                {
+                    stack.replace(index, index+2, rules.get(ruleNumber).getOutput());
+                }
+                else
+                {
+                    stack.replace(index, index+1, rules.get(ruleNumber).getOutput());
+                }
+
+            }
+            case "5", "3", "1" ->
+            {
+                int start = stack.lastIndexOf(String.valueOf(rules.get(ruleNumber).getInput().toCharArray()[0]));
+                int end = stack.lastIndexOf(String.valueOf(rules.get(ruleNumber).getInput().toCharArray()[2]));
+                stack.replace(start, end+1, rules.get(ruleNumber).getOutput());
+            }
+        }
+    }
+
+    private void shift()
+    {
+        if(checkIfID())
+        {
+            stack.append("id");
+            stack.append(lastOperation.split("s")[1]);
+            stringToParse = stringToParse.split("id", 2)[1];
+        }
+        else
+        {
+            String currentChar = String.valueOf(stringToParse.charAt(0));
+            stack.append(currentChar);
+            stack.append(lastOperation.split("s")[1]);
+            stringToParse = stringToParse.substring(1);
+        }
+
+        if(checkIfID())
+        {
+            lastOperation = actionOrGoTo.get("id").get(lastOperation.split("s")[1]);
+        }
+        else
+        {
+            lastOperation = actionOrGoTo.get(String.valueOf(stringToParse.charAt(0))).get(lastOperation.split("s")[1]);
+        }
+    }
     private void cleanInput()
     {
         stringToParse = stringToParse.replaceAll("\\s", "");

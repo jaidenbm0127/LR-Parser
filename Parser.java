@@ -13,8 +13,6 @@ public class Parser
         this.actionOrGoTo = new HashMap<>();
         this.stringToParse = testString;
 
-        makeTable();
-        makeRules();
     }
 
     private void makeRules()
@@ -89,6 +87,11 @@ public class Parser
 
     public void parseString()
     {
+
+        makeTable();
+        makeRules();
+        cleanInput();
+
         stack = new StringBuilder("0");
         String lastOperation = "";
         while(!Objects.equals(lastOperation, "acc"))
@@ -219,22 +222,9 @@ public class Parser
         }
     }
 
-    private String getNumberBeforeLetter(int letterIndex)
+    private void cleanInput()
     {
-        StringBuilder buildNum = new StringBuilder();
-        if(stack.length() > 3)
-        {
-            for(int i = letterIndex - 2; i < letterIndex; i++)
-            {
-                buildNum.append(stack.charAt(i));
-            }
-        }
-        else
-        {
-            stack.charAt(letterIndex - 1);
-        }
-
-        return buildNum.toString();
+        stringToParse = stringToParse.replaceAll("\\s", "");
     }
     private boolean checkIfID()
     {
@@ -243,7 +233,7 @@ public class Parser
 
     public static void main(String[] args)
     {
-        Parser myParser = new Parser("id*(id+id)$");
+        Parser myParser = new Parser("(id*id+id)*id*id+id$");
         myParser.parseString();
     }
 }

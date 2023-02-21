@@ -20,11 +20,13 @@ public class Parser
         cleanInput();
     }
 
+    // Get rid of spaces in input
     private void cleanInput()
     {
         stringToParse = stringToParse.replaceAll("\\s", "");
     }
 
+    // Make rule hashmap table
     private void makeRules()
     {
         rules = new HashMap<>()
@@ -38,6 +40,7 @@ public class Parser
         }};
     }
 
+    // Make action/goto table hashmap.
     private void makeTable()
     {
         HashMap<String, String> idStates = new HashMap<>()
@@ -95,6 +98,7 @@ public class Parser
         actionOrGoTo.put("F", F);
     }
 
+    // Loop through the input until the operation is "acc"
     public void parseString()
     {
         stack = new StringBuilder("0");
@@ -120,6 +124,7 @@ public class Parser
         }
     }
 
+    // On initial check, we know that the number is going to be 0 and that this is a special case.
     private boolean initialCheck()
     {
         if(lastOperation.isBlank())
@@ -137,6 +142,7 @@ public class Parser
         return false;
     }
 
+    // Deal with rule
     private void rule()
     {
 
@@ -160,6 +166,7 @@ public class Parser
         }
     }
 
+    // Gets rid of the trailing number in the stack if its a rule
     private void getRidOfTrailingNumber()
     {
         while(Character.isDigit(stack.charAt(stack.length()-1)))
@@ -168,6 +175,7 @@ public class Parser
         }
     }
 
+    // When we need to replace variables in the stack because of a rule
     private void dealWithCase(String ruleNumber)
     {
         switch(ruleNumber)
@@ -194,6 +202,7 @@ public class Parser
         }
     }
 
+    // Pop off the input and do all the things needed to be done
     private void shift()
     {
         if(checkIfID())

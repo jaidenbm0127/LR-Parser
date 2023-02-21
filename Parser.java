@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Scanner;
 
 public class Parser
 {
@@ -17,6 +18,11 @@ public class Parser
         makeTable();
         makeRules();
         cleanInput();
+    }
+
+    private void cleanInput()
+    {
+        stringToParse = stringToParse.replaceAll("\\s", "");
     }
 
     private void makeRules()
@@ -110,7 +116,7 @@ public class Parser
                     rule();
                 }
             }
-            System.out.println("Stack: " + stack.toString() + " Input: " + stringToParse + " Operation: " + lastOperation);
+            System.out.printf("%-30s %-30s %-30s\n", stack.toString(), stringToParse, lastOperation);
         }
     }
 
@@ -126,10 +132,8 @@ public class Parser
             {
                 lastOperation = actionOrGoTo.get("(").get("0");
             }
-
             return true;
         }
-
         return false;
     }
 
@@ -215,10 +219,6 @@ public class Parser
             lastOperation = actionOrGoTo.get(String.valueOf(stringToParse.charAt(0))).get(lastOperation.split("s")[1]);
         }
     }
-    private void cleanInput()
-    {
-        stringToParse = stringToParse.replaceAll("\\s", "");
-    }
     private boolean checkIfID()
     {
         return stringToParse.charAt(0) == 'i';
@@ -226,7 +226,12 @@ public class Parser
 
     public static void main(String[] args)
     {
-        Parser myParser = new Parser("(id*id+id)*id*id+id$");
+        Scanner keyboard = new Scanner(System.in);
+        System.out.print("Enter input: ");
+        Parser myParser = new Parser(keyboard.nextLine());
+
+        System.out.printf("%-30s %-30s %-30s\n", "Stack", "Input", "Code");
+
         myParser.parseString();
     }
 }
